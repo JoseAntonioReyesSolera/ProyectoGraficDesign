@@ -9,7 +9,9 @@ import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.util.Stack;
-
+/**
+ * Classe OpenCVDrawing que permet dibuixar sobre una imatge fent servir OpenCV.
+ */
 public class OpenCVDrawing extends JPanel {
     private Mat image;
     private BufferedImage bufferedImage;
@@ -18,7 +20,11 @@ public class OpenCVDrawing extends JPanel {
     private int brushSize = 2;
     private Stack<Mat> undoStack = new Stack<>();
     private Stack<Mat> redoStack = new Stack<>();
-
+    
+    /**
+     * Constructor que carrega una imatge des d'un path donat.
+     * @param imagePath Path de la imatge a carregar.
+     */
     public OpenCVDrawing(String imagePath) {
         System.load("C:\\Users\\Alumne\\Downloads\\opencv\\build\\java\\x64\\opencv_java490.dll");
         image = Imgcodecs.imread(imagePath);
@@ -46,12 +52,21 @@ public class OpenCVDrawing extends JPanel {
         });
     }
 
+    /**
+     * Pinta la imatge actual al component gràfic.
+     * @param g Objecte Graphics on es dibuixarà la imatge.
+     */
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
         g.drawImage(bufferedImage, 0, 0, this);
     }
-
+    
+    /**
+     * Converteix un Mat a BufferedImage.
+     * @param mat Mat a convertir.
+     * @return BufferedImage resultant.
+     */
     private BufferedImage matToBufferedImage(Mat mat) {
          Mat rgbMat = new Mat();
         Imgproc.cvtColor(mat, rgbMat, Imgproc.COLOR_BGR2RGB); // Convertir de BGR a RGB
@@ -64,24 +79,43 @@ public class OpenCVDrawing extends JPanel {
         image.getRaster().setDataElements(0, 0, width, height, data);
         return image;
     }
-
+    
+    /**
+     * Estableix el color del pinzell.
+     * @param color Color seleccionat per l'usuari.
+     */
     public void setColor(Color color) {
         this.currentColor = color;
     }
 
+    /**
+     * Estableix la mida del pinzell.
+     * @param size Mida del pinzell.
+     */
     public void setBrushSize(int size) {
         this.brushSize = size;
     }
 
+    /**
+     * Guarda la imatge editada a un path donat.
+     * @param path Path on es desarà la imatge.
+     */
     public void saveImage(String path) {
         Imgcodecs.imwrite(path, image);
         JOptionPane.showMessageDialog(this, "Imatge desada com: " + path);
     }
 
+    /**
+     * Desa l'estat actual de la imatge a l'stack per a desfer.
+     * @param stack Pila on es desa l'estat de la imatge.
+     */
     private void saveState(Stack<Mat> stack) {
         stack.push(image.clone());
     }
 
+    /**
+     * Acció de desfer l'últim traçat.
+     */
     public void undo() {
         if (!undoStack.isEmpty()) {
             saveState(redoStack);
@@ -91,6 +125,9 @@ public class OpenCVDrawing extends JPanel {
         }
     }
 
+    /**
+     * Acció de refer l'últim traçat desfet.
+     */
     public void redo() {
         if (!redoStack.isEmpty()) {
             saveState(undoStack);
