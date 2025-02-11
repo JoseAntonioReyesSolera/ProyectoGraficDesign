@@ -87,7 +87,7 @@ public class TextRecognition {
         TextRecognition textRecognition = new TextRecognition();
         textRecognition.recognizeTextFromImage(
             "C:\\Users\\Óscar\\Documents\\NetBeansProjects\\dibuixets\\src\\main\\resources\\images\\image.png",
-            "C:\\Users\\Óscar\\Documents\\NetBeansProjects\\dibuixets\\src\\main\\resources\\images\\image_processed.png"
+            "C:\\Users\\Óscar\\Documents\\NetBeansProjects\\dibuixets\\src\\main\\resources\\images\\image_processed.txt"
         );
     }
 }
