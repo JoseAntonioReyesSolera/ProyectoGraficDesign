@@ -1,17 +1,18 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package com.mycompany.dibuixets;
 
-import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import javax.imageio.ImageIO;
-import net.sourceforge.tess4j.*;
-import org.opencv.core.*;
+import net.sourceforge.tess4j.Tesseract;
+import net.sourceforge.tess4j.TesseractException;
+import org.opencv.core.Mat;
+import org.opencv.core.MatOfByte;
+import org.opencv.core.Size;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 
@@ -25,18 +26,17 @@ public class TextRecognition {
         ts.setLanguage("eng");
     }
 
-    public void recognizeTextFromImage(String imagePath, String outputImagePath) {
+    public void recognizeTextFromImage(String imagePath, String outputTextFilePath) {
         try {
             BufferedImage image = getImage(imagePath);
             if (image != null) {
-                // Realizar OCR
+                // Realizar OCR y obtener el texto
                 String text = ts.doOCR(image);
 
-                // Dibujar sobre la imagen
-                BufferedImage processedImage = drawTextOnImage(image, text);
-
-                // Guardar la imagen procesada
-                ImageIO.write(processedImage, "png", new File(outputImagePath));
+                // Escribir el texto reconocido en un archivo .txt
+                Files.write(Paths.get(outputTextFilePath), text.getBytes(), StandardOpenOption.CREATE);
+                
+                System.out.println("Archivo de texto generado: " + outputTextFilePath);
             }
         } catch (TesseractException | IOException e) {
             e.printStackTrace();
@@ -68,27 +68,14 @@ public class TextRecognition {
         return bufferedImage;
     }
 
-    private BufferedImage drawTextOnImage(BufferedImage image, String text) {
-        Graphics2D g = image.createGraphics();
-        g.setColor(Color.RED);  // Color del rectángulo
-        g.setStroke(new BasicStroke(3)); // Grosor del rectángulo
-        g.drawRect(50, 50, image.getWidth() - 100, image.getHeight() - 100); // Dibujar rectángulo
-
-        g.setColor(Color.YELLOW); // Color del texto
-        g.setFont(new Font("Arial", Font.BOLD, 28));
-        g.drawString(text, 60, 80); // Dibujar texto en la imagen
-        g.dispose();
-        return image;
-    }
-
     public static void main(String[] args) {
+        // Cargar la librería de OpenCV
         System.load("C:\\opencv\\build\\java\\x64\\opencv_java490.dll");
 
         TextRecognition textRecognition = new TextRecognition();
         textRecognition.recognizeTextFromImage(
-            "C:\\Users\\Óscar\\Documents\\NetBeansProjects\\dibuixets\\src\\main\\resources\\images\\image.png",
-            "C:\\Users\\Óscar\\Documents\\NetBeansProjects\\dibuixets\\src\\main\\resources\\images\\image_processed.txt"
+            "C:\\Users\\Óscar\\Documents\\NetBeansProjects\\dibuixets\\src\\main\\resources\\images\\eurotext.png",
+            "C:\\Users\\Óscar\\Documents\\NetBeansProjects\\dibuixets\\src\\main\\resources\\images\\eurotext.txt"
         );
     }
 }
-
