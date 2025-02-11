@@ -8,6 +8,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
+import java.io.File;
 import java.util.Stack;
 /**
  * Classe OpenCVDrawing que permet dibuixar sobre una imatge fent servir OpenCV.
@@ -26,7 +27,8 @@ public class OpenCVDrawing extends JPanel {
      * @param imagePath Path de la imatge a carregar.
      */
     public OpenCVDrawing(String imagePath) {
-        System.load("C:\\Users\\Alumne\\Downloads\\opencv\\build\\java\\x64\\opencv_java490.dll");
+        File file = new File("lib/opencv/build/java/x64/opencv_java490.dll");
+        System.load(file.getAbsolutePath());
         image = Imgcodecs.imread(imagePath);
         bufferedImage = matToBufferedImage(image);
 
@@ -137,6 +139,10 @@ public class OpenCVDrawing extends JPanel {
         }
     }
 
+    /**
+     *
+     * @param args
+     */
     public static void main(String[] args) {
         String imagePath = "images/moon.jpg";
         JFrame frame = new JFrame("OpenCV Drawing App");
