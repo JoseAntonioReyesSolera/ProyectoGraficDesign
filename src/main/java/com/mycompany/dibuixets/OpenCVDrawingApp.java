@@ -24,7 +24,7 @@ public class OpenCVDrawingApp extends JPanel {
     private JButton eraserButton;
 
     public OpenCVDrawingApp(String imagePath, JButton eraserButton) {
-        System.load("C:\\GS2\\2n any\\DVI\\Tema 4\\OpenCV\\opencv\\build\\java\\x64\\opencv_java490.dll");
+        System.load("C:\\Users\\Pau_Clase\\Downloads\\opencv\\build\\java\\x64\\opencv_java490.dll");
         this.eraserButton = eraserButton;
         image = Imgcodecs.imread(imagePath);
         background = image.clone();
@@ -69,11 +69,14 @@ public class OpenCVDrawingApp extends JPanel {
     }
 
     private BufferedImage matToBufferedImage(Mat mat) {
-        int width = mat.width();
-        int height = mat.height();
+         Mat rgbMat = new Mat();
+        Imgproc.cvtColor(mat, rgbMat, Imgproc.COLOR_BGR2RGB); // Convertir de BGR a RGB
+
+        int width = rgbMat.width();
+        int height = rgbMat.height();
         BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_3BYTE_BGR);
-        byte[] data = new byte[width * height * (int) mat.elemSize()];
-        mat.get(0, 0, data);
+        byte[] data = new byte[width * height * (int) rgbMat.elemSize()];
+        rgbMat.get(0, 0, data);
         image.getRaster().setDataElements(0, 0, width, height, data);
         return image;
     }
@@ -140,9 +143,24 @@ public class OpenCVDrawingApp extends JPanel {
             repaint();
         }
     }
+    
+    public void setColor(Color color) {
+        this.currentColor = color;
+    }
+    
+    public void setThickness(int size) {
+        this.thickness = size;
+    }
+    
+    public void saveImage(String path) {
+        Imgcodecs.imwrite(path, image);
+        JOptionPane.showMessageDialog(this, "Imatge desada com: " + path);
+    }
 
     public static void main(String[] args) {
-        String imagePath = "images\\moon.jpg";
+        
+        
+        String imagePath = "images\\abdullah.jpg";
         JFrame frame = new JFrame("OpenCV Drawing App");
 
         JButton undoButton = new JButton("Undo");
@@ -152,7 +170,30 @@ public class OpenCVDrawingApp extends JPanel {
         JButton circleButton = new JButton("Circle");
 
         OpenCVDrawingApp panel = new OpenCVDrawingApp(imagePath, eraserButton);
+        
+        
+        
+        
+        JPanel controlPanel = new JPanel();
+        JButton colorButton = new JButton("Seleccionar Color");
+        colorButton.addActionListener(e -> {
+            Color chosenColor = JColorChooser.showDialog(null, "Escull un color", panel.currentColor);
+            if (chosenColor != null) {
+                panel.setColor(chosenColor);
+            }
+        });
 
+        JSlider brushSlider = new JSlider(1, 10, 2);
+        brushSlider.addChangeListener(e -> panel.setThickness(brushSlider.getValue()));
+
+        JButton saveButton = new JButton("Guardar");
+        saveButton.addActionListener(e -> panel.saveImage("images/saved_image.jpg"));
+        
+       
+        
+        
+        
+        
         undoButton.addActionListener(e -> panel.undo());
         redoButton.addActionListener(e -> panel.redo());
         eraserButton.addActionListener(e -> panel.toggleEraser());
@@ -165,7 +206,13 @@ public class OpenCVDrawingApp extends JPanel {
         controls.add(eraserButton);
         controls.add(rectButton);
         controls.add(circleButton);
+        
+        controlPanel.add(colorButton);
+        controlPanel.add(new JLabel("Mida del pinzell:"));
+        controlPanel.add(brushSlider);
+        controlPanel.add(saveButton);
 
+        frame.add(controlPanel, BorderLayout.SOUTH);
         frame.add(controls, BorderLayout.NORTH);
         frame.add(panel);
         frame.setSize(800, 600);

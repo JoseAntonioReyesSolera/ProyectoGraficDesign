@@ -23,7 +23,7 @@ import org.opencv.objdetect.Objdetect;
 public class FaceDetector {
     
     public static void main(String[] args){
-        System.load("C:\\GS2\\2n any\\DVI\\Tema 4\\OpenCV\\opencv\\build\\java\\x64\\opencv_java490.dll");
+        System.load("C:\\Users\\Pau_Clase\\Downloads\\opencv\\build\\java\\x64\\opencv_java490.dll");
         //System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
         Mat image = Imgcodecs.imread(("images/faces.png"));
         // mètode detector

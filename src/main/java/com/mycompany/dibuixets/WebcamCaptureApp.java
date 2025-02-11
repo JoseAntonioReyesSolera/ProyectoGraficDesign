@@ -50,7 +50,7 @@ public class WebcamCaptureApp extends JFrame {
     }
 
     public void start() {
-        System.load("C:\\GS2\\2n any\\DVI\\Tema 4\\OpenCV\\opencv\\build\\java\\x64\\opencv_java490.dll");
+        System.load("C:\\Users\\Pau_Clase\\Downloads\\opencv\\build\\java\\x64\\opencv_java490.dll");
         //System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
         capture = new VideoCapture(0);
         frame = new Mat();
