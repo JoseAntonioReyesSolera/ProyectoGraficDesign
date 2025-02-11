@@ -1,0 +1,2 @@
+opencv,C:\Users\Pau_Clase\Downloads\openc
+opencv,C:\Users\Pau_Clase\Downloads\opencv\build\java\x64\opencv_java490.dll

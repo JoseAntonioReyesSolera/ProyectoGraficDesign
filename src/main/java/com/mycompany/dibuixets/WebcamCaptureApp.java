@@ -9,8 +9,6 @@ import org.opencv.core.Mat;
 import org.opencv.core.MatOfByte;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.videoio.VideoCapture;
-import org.opencv.core.Size;
-import org.opencv.imgproc.Imgproc;
 
 import javax.swing.*;
 import java.awt.*;
@@ -50,7 +48,7 @@ public class WebcamCaptureApp extends JFrame {
     }
 
     public void start() {
-        System.load("C:\\Users\\Alumne\\Downloads\\opencv\\build\\java\\x64\\opencv_java490.dll");
+        System.load(Preferences.getOpenCVPath());
         capture = new VideoCapture(0);
         frame = new Mat();
 

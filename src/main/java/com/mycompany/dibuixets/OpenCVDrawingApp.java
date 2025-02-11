@@ -15,7 +15,7 @@ public class OpenCVDrawingApp extends JPanel {
     private java.awt.Point lastPoint;
 
     public OpenCVDrawingApp(String imagePath) {
-        System.load("C:\\Users\\Alumne\\Downloads\\opencv\\build\\java\\x64\\opencv_java490.dll");
+        System.load(Preferences.getOpenCVPath());
         image = Imgcodecs.imread(imagePath);
         bufferedImage = matToBufferedImage(image);
 
@@ -53,9 +53,9 @@ public class OpenCVDrawingApp extends JPanel {
         image.getRaster().setDataElements(0, 0, width, height, data);
         return image;
     }
-    
+
     public static void main(String[] args) {
-        String imagePath = "C:\\Users\\Alumne\\Documents\\NetBeansProjects\\Dibuixos\\images\\moon.jpg";
+        String imagePath = "images/moon.jpg";
         JFrame frame = new JFrame("OpenCV Drawing App");
         OpenCVDrawingApp panel = new OpenCVDrawingApp(imagePath);
         frame.add(panel);

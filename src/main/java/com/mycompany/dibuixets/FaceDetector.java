@@ -4,7 +4,7 @@
  */
 package com.mycompany.dibuixets;
 
-import org.opencv.core.Core;
+import java.io.File;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfRect;
 import org.opencv.core.Rect;
@@ -23,8 +23,8 @@ import org.opencv.objdetect.Objdetect;
 public class FaceDetector {
     
     public static void main(String[] args){
-        System.load("C:\\Users\\Alumne\\Downloads\\opencv\\build\\java\\x64\\opencv_java490.dll");
-        Mat image = Imgcodecs.imread(("images/aco.jpg"));
+        System.load(Preferences.getOpenCVPath());
+        Mat image = Imgcodecs.imread(("images/abdullah.jpg"));
         // mètode detector
         detectAndSave(image);
     }
