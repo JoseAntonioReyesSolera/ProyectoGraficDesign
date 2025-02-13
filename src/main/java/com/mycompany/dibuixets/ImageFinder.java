@@ -4,7 +4,6 @@ import javax.swing.*;
 import java.awt.*;
 import java.io.File;
 import java.io.FilenameFilter;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -12,6 +11,7 @@ public class ImageFinder extends JDialog {
     private File selectedFile = null;
     private boolean selected = false;
     private static final String imagesPath = "images";
+    private JPanel thumbnailPanel;
 
     public ImageFinder(Frame owner) {
         super(owner, "Seleccionar Imagen, doble click para seleccionar", true);
@@ -20,20 +20,17 @@ public class ImageFinder extends JDialog {
 
     private void initComponents() {
         setLayout(new BorderLayout());
-        JPanel thumbnailPanel = new JPanel();
+        thumbnailPanel = new JPanel();
         thumbnailPanel.setLayout(new GridLayout(0, 3, 10, 10)); // Grid de 3 columnas
 
         // Obtener rutas de imágenes desde DataAccess
         List<File> imagePaths = getImageFiles(imagesPath);
         
-        
-
         if (imagePaths.isEmpty()) {
             JOptionPane.showMessageDialog(this, "No se encontraron imágenes.", "Información", JOptionPane.INFORMATION_MESSAGE);
         } else {
-            for (File imag : imagePaths) {
-                thumbnailPanel.add(createThumbnail(imag));
-            }
+            // Cargar imágenes de manera asíncrona
+            loadThumbnails(imagePaths);
         }
 
         JScrollPane scrollPane = new JScrollPane(thumbnailPanel);
@@ -41,6 +38,36 @@ public class ImageFinder extends JDialog {
 
         setSize(700, 400);
         setLocationRelativeTo(getOwner());
+    }
+
+    private void loadThumbnails(List<File> imagePaths) {
+        // Usamos SwingWorker para cargar las miniaturas en un hilo en segundo plano
+        SwingWorker<Void, JPanel> worker = new SwingWorker<Void, JPanel>() {
+            @Override
+            protected Void doInBackground() throws Exception {
+                for (File file : imagePaths) {
+                    JPanel thumbnailPanelItem = createThumbnail(file);
+                    publish(thumbnailPanelItem); // Pasar cada panel al hilo de la interfaz gráfica
+                }
+                return null;
+            }
+
+            @Override
+            protected void process(List<JPanel> chunks) {
+                for (JPanel panel : chunks) {
+                    thumbnailPanel.add(panel); // Añadir los paneles creados en el hilo principal
+                }
+                thumbnailPanel.revalidate(); // Actualizar la interfaz
+                thumbnailPanel.repaint();
+            }
+
+            @Override
+            protected void done() {
+                // No es necesario hacer nada cuando termine
+            }
+        };
+
+        worker.execute(); // Ejecutar el hilo en segundo plano
     }
 
     private JPanel createThumbnail(File file) {
@@ -101,7 +128,7 @@ public class ImageFinder extends JDialog {
         sercher.setVisible(true);
         return sercher.getSelectedFile();
     }
-    
+
     public static List<File> getImageFiles(String directoryPath) {
         File folder = new File(directoryPath);
         File[] files = null;
@@ -117,6 +144,6 @@ public class ImageFinder extends JDialog {
             });
         }
         
-        return Arrays.asList(files);
+        return Arrays.asList(files != null ? files : new File[0]);
     }
 }

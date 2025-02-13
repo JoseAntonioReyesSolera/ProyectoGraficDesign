@@ -16,34 +16,46 @@ import org.opencv.core.Size;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 
+
 public class TextRecognition {
 
-    private final Tesseract ts;
+    private static Tesseract ts;
 
-    public TextRecognition() {
+    
+    public static String getTextFromImage(File imageFile){
+        // Cargar la librería de OpenCV
+        System.load(Preferences.getOpenCVPath());
+        File textFolder = new File("SavedText");
+        
         ts = new Tesseract();
         ts.setDatapath(new File("tessdata").getAbsolutePath());
         ts.setLanguage("eng");
+        
+        if (!textFolder.exists()) {
+            textFolder.mkdir();
+        }
+
+        return recognizeTextFromImage(
+            imageFile.getAbsolutePath(),
+            textFolder.getAbsolutePath() + "/analizedText.txt"
+        );
     }
 
-    public void recognizeTextFromImage(String imagePath, String outputTextFilePath) {
+    private static String recognizeTextFromImage(String imagePath, String outputTextFilePath) {
         try {
             BufferedImage image = getImage(imagePath);
             if (image != null) {
                 // Realizar OCR y obtener el texto
-                String text = ts.doOCR(image);
-
-                // Escribir el texto reconocido en un archivo .txt
-                Files.write(Paths.get(outputTextFilePath), text.getBytes(), StandardOpenOption.CREATE);
-                
-                System.out.println("Archivo de texto generado: " + outputTextFilePath);
+                String text = ts.doOCR(image);                
+                return text;
             }
         } catch (TesseractException | IOException e) {
             e.printStackTrace();
         }
+        return "";
     }
 
-    private BufferedImage getImage(String imgPath) throws IOException {
+    private static BufferedImage getImage(String imgPath) throws IOException {
         Mat mat = Imgcodecs.imread(imgPath);
         if (mat.empty()) {
             return null;
@@ -66,16 +78,5 @@ public class TextRecognition {
         mof.release();
 
         return bufferedImage;
-    }
-
-    public static void main(String[] args) {
-        // Cargar la librería de OpenCV
-        System.load("C:\\opencv\\build\\java\\x64\\opencv_java490.dll");
-
-        TextRecognition textRecognition = new TextRecognition();
-        textRecognition.recognizeTextFromImage(
-            "C:\\Users\\Óscar\\Documents\\NetBeansProjects\\dibuixets\\src\\main\\resources\\images\\eurotext.png",
-            "C:\\Users\\Óscar\\Documents\\NetBeansProjects\\dibuixets\\src\\main\\resources\\images\\eurotext.txt"
-        );
     }
 }

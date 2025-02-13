@@ -3,7 +3,9 @@ com\mycompany\dibuixets\Main$4.class
 com\mycompany\dibuixets\FaceDetector.class
 com\mycompany\dibuixets\ImageFinder$1.class
 com\mycompany\dibuixets\WebcamCaptureApp.class
+com\mycompany\dibuixets\TextRecognition.class
 com\mycompany\dibuixets\ImageFinder.class
+com\mycompany\dibuixets\ImageFinder$3.class
 com\mycompany\dibuixets\Preferences.class
 com\mycompany\dibuixets\Main.class
 com\mycompany\dibuixets\ImageFinder$2.class

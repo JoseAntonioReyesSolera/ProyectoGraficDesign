@@ -21,17 +21,13 @@ import org.opencv.objdetect.Objdetect;
  * @author Usuario
  */
 public class FaceDetector {
-    
-    public static void main(String[] args){
-        System.load(Preferences.getOpenCVPath());
-        Mat image = Imgcodecs.imread(("images/abdullah.jpg"));
-        // mètode detector
-        detectAndSave(image);
-    }
 
-    private static void detectAndSave(Mat image) {
+    public static File detectAndSave(File imagePath) {
+        System.load(Preferences.getOpenCVPath());
         //create som objectes
         MatOfRect faces = new MatOfRect();
+        
+        Mat image = Imgcodecs.imread(imagePath.getAbsolutePath());
         
         
         // TO GRAY SCALE
@@ -66,7 +62,8 @@ public class FaceDetector {
         }
         
         Imgcodecs.imwrite("images/output.jpg", image);
-                
+        
+        return new File("images/output.jpg");
     }
     
 }

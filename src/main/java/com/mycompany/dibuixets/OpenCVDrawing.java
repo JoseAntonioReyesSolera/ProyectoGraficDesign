@@ -10,6 +10,7 @@ import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.util.Stack;
+import org.opencv.core.Point; // Para dibujar en la imagen con OpenCV
 
 public class OpenCVDrawing extends JPanel {
     private Mat image, background;
@@ -23,10 +24,11 @@ public class OpenCVDrawing extends JPanel {
     private Stack<Mat> undoStack = new Stack<>();
     private Stack<Mat> redoStack = new Stack<>();
     private JButton eraserButton;
+    private double scaleX, scaleY, scale;
+    private int newWidth, newHeight; 
+    private int offsetX, offsetY;
+    private static Main mainFrame;
 
-    public OpenCVDrawing(File imagePath){
-        setUp(imagePath);
-    }
     
     public OpenCVDrawing(String imagePath, JButton eraserButton) {
         System.load(Preferences.getOpenCVPath());
@@ -35,43 +37,82 @@ public class OpenCVDrawing extends JPanel {
         background = image.clone();
         bufferedImage = matToBufferedImage(image);
 
-        addMouseListener(new MouseAdapter() {
-            public void mousePressed(MouseEvent e) {
-                startPoint = e.getPoint();
-                saveState();
+    addMouseListener(new MouseAdapter() {
+        @Override
+        public void mousePressed(MouseEvent e) {
+            startPoint = convertMousePointToImage(e.getPoint());
+            saveState();
+        }
+
+        @Override
+        public void mouseReleased(MouseEvent e) {
+            if (drawingRectangle) {
+                drawRectangle();
+            } else if (drawingCircle) {
+                drawCircle();
+            }
+            startPoint = null;
+            endPoint = null;
+        }
+    });
+
+    addMouseMotionListener(new MouseMotionAdapter() {
+        @Override
+        public void mouseDragged(MouseEvent e) {
+            endPoint = convertMousePointToImage(e.getPoint());
+
+            if (!drawingRectangle && !drawingCircle) {
+                Scalar color = eraserMode ? getBackgroundColor(startPoint) : new Scalar(
+                        currentColor.getBlue(), currentColor.getGreen(), currentColor.getRed());
+                Imgproc.line(image, new org.opencv.core.Point(startPoint.x, startPoint.y),
+                             new org.opencv.core.Point(endPoint.x, endPoint.y), color, thickness);
+                startPoint = endPoint;
             }
 
-            public void mouseReleased(MouseEvent e) {
-                if (drawingRectangle) {
-                    drawRectangle();
-                } else if (drawingCircle) {
-                    drawCircle();
-                }
-                startPoint = null;
-                endPoint = null;
-            }
-        });
+            bufferedImage = matToBufferedImage(image);
+            repaint();
+        }
+    });
 
-        addMouseMotionListener(new MouseMotionAdapter() {
-            public void mouseDragged(MouseEvent e) {
-                endPoint = e.getPoint();
-                if (!drawingRectangle && !drawingCircle) {
-                    Scalar color = eraserMode ? getBackgroundColor(startPoint) : new Scalar(currentColor.getBlue(), currentColor.getGreen(), currentColor.getRed());
-                    Imgproc.line(image, new org.opencv.core.Point(startPoint.x, startPoint.y),
-                            new org.opencv.core.Point(e.getX(), e.getY()), color, thickness);
-                    startPoint = e.getPoint();
-                }
-                bufferedImage = matToBufferedImage(image);
-                repaint();
-            }
-        });
     }
-
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
-        g.drawImage(bufferedImage, 0, 0, this);
+
+        if (bufferedImage != null) {
+            int panelWidth = getWidth();
+            int panelHeight = getHeight();
+            int imgWidth = bufferedImage.getWidth();
+            int imgHeight = bufferedImage.getHeight();
+
+            // Calcular escala y mantener proporción
+            scaleX = (double) panelWidth / imgWidth;
+            scaleY = (double) panelHeight / imgHeight;
+            scale = Math.min(scaleX, scaleY);
+
+            newWidth = (int) (imgWidth * scale);
+            newHeight = (int) (imgHeight * scale);
+
+            offsetX = (panelWidth - newWidth) / 2;
+            offsetY = (panelHeight - newHeight) / 2;
+
+            // Dibujar la imagen escalada y centrada
+            g.drawImage(bufferedImage, offsetX, offsetY, newWidth, newHeight, this);
+        }
     }
+    
+    private java.awt.Point convertMousePointToImage(java.awt.Point panelPoint) {
+        int imgX = (int) ((panelPoint.x - offsetX) / scale);
+        int imgY = (int) ((panelPoint.y - offsetY) / scale);
+
+        // Asegurar que las coordenadas están dentro de los límites de la imagen
+        imgX = Math.max(0, Math.min(imgX, image.width() - 1));
+        imgY = Math.max(0, Math.min(imgY, image.height() - 1));
+
+        return new java.awt.Point(imgX, imgY);
+    }
+
+
 
     private BufferedImage matToBufferedImage(Mat mat) {
          Mat rgbMat = new Mat();
@@ -160,10 +201,12 @@ public class OpenCVDrawing extends JPanel {
     public void saveImage(String path) {
         Imgcodecs.imwrite(path, image);
         JOptionPane.showMessageDialog(this, "Imatge desada com: " + path);
+        mainFrame.setImage(new File(path));
     }
 
     
-    private void setUp(File image){
+    public static void setUp(File image, Main mainFrame){
+        OpenCVDrawing.mainFrame = mainFrame;
         String imagePath = image.getAbsolutePath();
         JFrame frame = new JFrame("OpenCV Drawing App");
 
