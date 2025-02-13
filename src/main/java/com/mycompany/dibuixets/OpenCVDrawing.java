@@ -10,65 +10,69 @@ import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.util.Stack;
-/**
- * Classe OpenCVDrawing que permet dibuixar sobre una imatge fent servir OpenCV.
- */
+
 public class OpenCVDrawing extends JPanel {
-    private Mat image;
+    private Mat image, background;
     private BufferedImage bufferedImage;
-    private java.awt.Point lastPoint;
-    private Color currentColor = Color.GRAY;
-    private int brushSize = 2;
+    private java.awt.Point startPoint, endPoint;
+    private Color currentColor = Color.RED;
+    private int thickness = 2;
+    private boolean eraserMode = false;
+    private boolean drawingRectangle = false;
+    private boolean drawingCircle = false;
     private Stack<Mat> undoStack = new Stack<>();
     private Stack<Mat> redoStack = new Stack<>();
+    private JButton eraserButton;
+
+    public OpenCVDrawing(File imagePath){
+        setUp(imagePath);
+    }
     
-    /**
-     * Constructor que carrega una imatge des d'un path donat.
-     * @param imagePath Path de la imatge a carregar.
-     */
-    public OpenCVDrawing(String imagePath) {
-        File file = new File("lib/opencv/build/java/x64/opencv_java490.dll");
-        System.load(file.getAbsolutePath());
+    public OpenCVDrawing(String imagePath, JButton eraserButton) {
+        System.load(Preferences.getOpenCVPath());
+        this.eraserButton = eraserButton;
         image = Imgcodecs.imread(imagePath);
+        background = image.clone();
         bufferedImage = matToBufferedImage(image);
 
         addMouseListener(new MouseAdapter() {
             public void mousePressed(MouseEvent e) {
-                lastPoint = e.getPoint();
-                saveState(undoStack);
-                redoStack.clear();
+                startPoint = e.getPoint();
+                saveState();
+            }
+
+            public void mouseReleased(MouseEvent e) {
+                if (drawingRectangle) {
+                    drawRectangle();
+                } else if (drawingCircle) {
+                    drawCircle();
+                }
+                startPoint = null;
+                endPoint = null;
             }
         });
 
         addMouseMotionListener(new MouseMotionAdapter() {
             public void mouseDragged(MouseEvent e) {
-                if (lastPoint != null) {
-                    Scalar color = new Scalar(currentColor.getBlue(), currentColor.getGreen(), currentColor.getRed()); // Cambiar a BGR
-                    Imgproc.line(image, new org.opencv.core.Point(lastPoint.x, lastPoint.y),
-                            new org.opencv.core.Point(e.getX(), e.getY()), color, brushSize);
-                    lastPoint = e.getPoint();
-                    bufferedImage = matToBufferedImage(image);
-                    repaint();
+                endPoint = e.getPoint();
+                if (!drawingRectangle && !drawingCircle) {
+                    Scalar color = eraserMode ? getBackgroundColor(startPoint) : new Scalar(currentColor.getBlue(), currentColor.getGreen(), currentColor.getRed());
+                    Imgproc.line(image, new org.opencv.core.Point(startPoint.x, startPoint.y),
+                            new org.opencv.core.Point(e.getX(), e.getY()), color, thickness);
+                    startPoint = e.getPoint();
                 }
+                bufferedImage = matToBufferedImage(image);
+                repaint();
             }
         });
     }
 
-    /**
-     * Pinta la imatge actual al component gràfic.
-     * @param g Objecte Graphics on es dibuixarà la imatge.
-     */
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
         g.drawImage(bufferedImage, 0, 0, this);
     }
-    
-    /**
-     * Converteix un Mat a BufferedImage.
-     * @param mat Mat a convertir.
-     * @return BufferedImage resultant.
-     */
+
     private BufferedImage matToBufferedImage(Mat mat) {
          Mat rgbMat = new Mat();
         Imgproc.cvtColor(mat, rgbMat, Imgproc.COLOR_BGR2RGB); // Convertir de BGR a RGB
@@ -81,76 +85,99 @@ public class OpenCVDrawing extends JPanel {
         image.getRaster().setDataElements(0, 0, width, height, data);
         return image;
     }
-    
-    /**
-     * Estableix el color del pinzell.
-     * @param color Color seleccionat per l'usuari.
-     */
-    public void setColor(Color color) {
-        this.currentColor = color;
+
+    private Scalar getBackgroundColor(java.awt.Point point) {
+        double[] bgColor = background.get(point.y, point.x);
+        return new Scalar(bgColor);
     }
 
-    /**
-     * Estableix la mida del pinzell.
-     * @param size Mida del pinzell.
-     */
-    public void setBrushSize(int size) {
-        this.brushSize = size;
+    private void saveState() {
+        undoStack.push(image.clone());
+        redoStack.clear();
     }
 
-    /**
-     * Guarda la imatge editada a un path donat.
-     * @param path Path on es desarà la imatge.
-     */
-    public void saveImage(String path) {
-        Imgcodecs.imwrite(path, image);
-        JOptionPane.showMessageDialog(this, "Imatge desada com: " + path);
-    }
-
-    /**
-     * Desa l'estat actual de la imatge a l'stack per a desfer.
-     * @param stack Pila on es desa l'estat de la imatge.
-     */
-    private void saveState(Stack<Mat> stack) {
-        stack.push(image.clone());
-    }
-
-    /**
-     * Acció de desfer l'últim traçat.
-     */
     public void undo() {
         if (!undoStack.isEmpty()) {
-            saveState(redoStack);
+            redoStack.push(image.clone());
             image = undoStack.pop();
             bufferedImage = matToBufferedImage(image);
             repaint();
         }
     }
 
-    /**
-     * Acció de refer l'últim traçat desfet.
-     */
     public void redo() {
         if (!redoStack.isEmpty()) {
-            saveState(undoStack);
+            undoStack.push(image.clone());
             image = redoStack.pop();
             bufferedImage = matToBufferedImage(image);
             repaint();
         }
     }
 
-    /**
-     *
-     * @param args
-     */
-    public static void main(String[] args) {
-        String imagePath = "images/moon.jpg";
-        JFrame frame = new JFrame("OpenCV Drawing App");
-        OpenCVDrawing panel = new OpenCVDrawing(imagePath);
-        frame.add(panel);
-        frame.setSize(800, 600);
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+    public void toggleEraser() {
+        eraserMode = !eraserMode;
+        eraserButton.setText(eraserMode ? "Erasing" : "Drawing");
+    }
 
+    public void toggleRectangleMode() {
+        drawingRectangle = !drawingRectangle;
+        drawingCircle = false;
+    }
+
+    public void toggleCircleMode() {
+        drawingCircle = !drawingCircle;
+        drawingRectangle = false;
+    }
+
+    private void drawRectangle() {
+        if (startPoint != null && endPoint != null) {
+            Imgproc.rectangle(image, new org.opencv.core.Point(startPoint.x, startPoint.y),
+                    new org.opencv.core.Point(endPoint.x, endPoint.y),
+                    new Scalar(currentColor.getBlue(), currentColor.getGreen(), currentColor.getRed()), thickness);
+            bufferedImage = matToBufferedImage(image);
+            repaint();
+        }
+    }
+
+    private void drawCircle() {
+        if (startPoint != null && endPoint != null) {
+            int radius = (int) Math.sqrt(Math.pow(endPoint.x - startPoint.x, 2) + Math.pow(endPoint.y - startPoint.y, 2));
+            Imgproc.circle(image, new org.opencv.core.Point(startPoint.x, startPoint.y),
+                    radius, new Scalar(currentColor.getBlue(), currentColor.getGreen(), currentColor.getRed()), thickness);
+            bufferedImage = matToBufferedImage(image);
+            repaint();
+        }
+    }
+    
+    public void setColor(Color color) {
+        this.currentColor = color;
+    }
+    
+    public void setThickness(int size) {
+        this.thickness = size;
+    }
+    
+    public void saveImage(String path) {
+        Imgcodecs.imwrite(path, image);
+        JOptionPane.showMessageDialog(this, "Imatge desada com: " + path);
+    }
+
+    
+    private void setUp(File image){
+        String imagePath = image.getAbsolutePath();
+        JFrame frame = new JFrame("OpenCV Drawing App");
+
+        JButton undoButton = new JButton("Undo");
+        JButton redoButton = new JButton("Redo");
+        JButton eraserButton = new JButton("Drawing");
+        JButton rectButton = new JButton("Rectangle");
+        JButton circleButton = new JButton("Circle");
+
+        OpenCVDrawing panel = new OpenCVDrawing(imagePath, eraserButton);
+        
+        
+        
+        
         JPanel controlPanel = new JPanel();
         JButton colorButton = new JButton("Seleccionar Color");
         colorButton.addActionListener(e -> {
@@ -161,25 +188,35 @@ public class OpenCVDrawing extends JPanel {
         });
 
         JSlider brushSlider = new JSlider(1, 10, 2);
-        brushSlider.addChangeListener(e -> panel.setBrushSize(brushSlider.getValue()));
+        brushSlider.addChangeListener(e -> panel.setThickness(brushSlider.getValue()));
 
         JButton saveButton = new JButton("Guardar");
         saveButton.addActionListener(e -> panel.saveImage("images/saved_image.jpg"));
         
-        JButton undoButton = new JButton("Desfer");
-        undoButton.addActionListener(e -> panel.undo());
         
-        JButton redoButton = new JButton("Refer");
+        undoButton.addActionListener(e -> panel.undo());
         redoButton.addActionListener(e -> panel.redo());
+        eraserButton.addActionListener(e -> panel.toggleEraser());
+        rectButton.addActionListener(e -> panel.toggleRectangleMode());
+        circleButton.addActionListener(e -> panel.toggleCircleMode());
 
+        JPanel controls = new JPanel();
+        controls.add(undoButton);
+        controls.add(redoButton);
+        controls.add(eraserButton);
+        controls.add(rectButton);
+        controls.add(circleButton);
+        
         controlPanel.add(colorButton);
         controlPanel.add(new JLabel("Mida del pinzell:"));
         controlPanel.add(brushSlider);
         controlPanel.add(saveButton);
-        controlPanel.add(undoButton);
-        controlPanel.add(redoButton);
-        
+
         frame.add(controlPanel, BorderLayout.SOUTH);
+        frame.add(controls, BorderLayout.NORTH);
+        frame.add(panel);
+        frame.setSize(800, 600);
+        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         frame.setVisible(true);
     }
 }

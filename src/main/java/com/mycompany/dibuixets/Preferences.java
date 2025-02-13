@@ -8,6 +8,10 @@ import java.util.logging.Logger;
 
 public class Preferences {
     public static String getOpenCVPath() {
+        File preferenciasFolder = new File("data");
+        if (!preferenciasFolder.exists()) {
+            preferenciasFolder.mkdir();
+        }
         File preferenciasFile = new File("data/preferencias.txt");
         HashMap<String, String> preferencias = new HashMap<>();
 
@@ -20,19 +24,27 @@ public class Preferences {
                         preferencias.put(parts[0], parts[1]);
                     }
                 }
-                if (preferencias.containsKey("opencv")) {
-                    if (preferencias.get("opencv").endsWith("opencv_java490.dll")){
-                    return preferencias.get("opencv");
+                if (preferencias.containsKey("opencv") && preferencias.get("opencv").endsWith("opencv_java490.dll")) {
+                    try {
+                        File file = new File(preferencias.get("opencv"));
+                        return preferencias.get("opencv");
+                    }
+                    catch (Exception e){
+                        getNewRoute(preferenciasFile);
                     }
                 }
             } catch (Exception ex) {
                 Logger.getLogger(Preferences.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
-
+        
+        return getNewRoute(preferenciasFile);
+    }
+    
+    private static String getNewRoute(File preferenciasFile){
         JDialog dialog = new JDialog();
         dialog.setAlwaysOnTop(true);
-        JOptionPane.showMessageDialog(dialog, "No se ha encontrado la ruta de OpenCV. Por favor, seleccione la carpeta de OpenCV.", "Error", JOptionPane.ERROR_MESSAGE);
+        JOptionPane.showMessageDialog(dialog, "No se ha encontrado la ruta de OpenCV o no es valida. Por favor, seleccione la carpeta de OpenCV.", "Error", JOptionPane.ERROR_MESSAGE);
         
         // Si no existe la ruta en el archivo, abrir JFileChooser
         JFileChooser fileChooser = new JFileChooser();
@@ -54,7 +66,6 @@ public class Preferences {
             
             return opencvPath;
         }
-        
         return null;
     }
 }
