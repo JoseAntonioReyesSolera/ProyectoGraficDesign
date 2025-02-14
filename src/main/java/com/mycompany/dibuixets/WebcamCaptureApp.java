@@ -1,6 +1,5 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+/**
+ * Aplicación para capturar imágenes desde la webcam utilizando OpenCV y Swing.
  */
 package com.mycompany.dibuixets;
 
@@ -18,12 +17,20 @@ import java.io.File;
 import java.io.IOException;
 import javax.imageio.ImageIO;
 
+/**
+ * Clase que representa una aplicación para capturar imágenes desde la webcam.
+ * Extiende JFrame y utiliza OpenCV para la captura de imágenes.
+ */
 public class WebcamCaptureApp extends JFrame {
     private JLabel imageLabel;
     private VideoCapture capture;
     private Mat frame;
     private boolean capturing = false;
 
+    /**
+     * Constructor de la aplicación de captura de imágenes de la webcam.
+     * Configura la interfaz gráfica y los elementos necesarios.
+     */
     public WebcamCaptureApp() {
         setTitle("Captura d'Imatges de la Webcam");
         setSize(640, 480);
@@ -38,15 +45,23 @@ public class WebcamCaptureApp extends JFrame {
         add(captureButton, BorderLayout.SOUTH);
     }
 
+    /**
+     * Captura una imagen de la webcam y la guarda en un archivo.
+     * Solicita al usuario un nombre de archivo y lo almacena en la carpeta "images".
+     */
     private void captureImage() {
         String fileName = JOptionPane.showInputDialog(this, "Introdueix el nom del fitxer:");
         if (fileName != null && !fileName.trim().isEmpty()) {
-            File outputFile = new File("images/"+ fileName + ".jpg");
+            File outputFile = new File("images/" + fileName + ".jpg");
             Imgcodecs.imwrite(outputFile.getAbsolutePath(), frame);
             JOptionPane.showMessageDialog(this, "Imatge desada com: " + outputFile.getAbsolutePath());
         }
     }
 
+    /**
+     * Inicia la captura de video desde la webcam y muestra los fotogramas en la interfaz gráfica.
+     * Carga la biblioteca de OpenCV antes de iniciar la captura.
+     */
     public void start() {
         System.load(Preferences.getOpenCVPath());
         capture = new VideoCapture(0);
@@ -71,6 +86,12 @@ public class WebcamCaptureApp extends JFrame {
         }).start();
     }
 
+    /**
+     * Convierte un objeto Mat de OpenCV a BufferedImage.
+     *
+     * @param mat Matriz de imagen de OpenCV.
+     * @return BufferedImage representando la imagen.
+     */
     private BufferedImage matToBufferedImage(Mat mat) {
         MatOfByte matOfByte = new MatOfByte();
         Imgcodecs.imencode(".jpg", mat, matOfByte);
@@ -84,12 +105,16 @@ public class WebcamCaptureApp extends JFrame {
         return img;
     }
 
+    /**
+     * Método principal que inicia la aplicación en el hilo de eventos de Swing.
+     * 
+     * @param args Argumentos de la línea de comandos (no utilizados).
+     */
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> { // què és això?
+        SwingUtilities.invokeLater(() -> {
             WebcamCaptureApp app = new WebcamCaptureApp();
             app.setVisible(true);
             app.start();
         });
     }
 }
-

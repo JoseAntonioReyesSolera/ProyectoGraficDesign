@@ -1,6 +1,5 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+/**
+ * Clase encargada de detectar rostros en una imagen y guardar el resultado con los rostros marcados.
  */
 package com.mycompany.dibuixets;
 
@@ -15,55 +14,59 @@ import org.opencv.imgproc.Imgproc;
 import org.opencv.objdetect.CascadeClassifier;
 import org.opencv.objdetect.Objdetect;
 
-
 /**
- *
- * @author Usuario
+ * Clase FaceDetector que proporciona funcionalidad para detectar rostros en una imagen
+ * y guardar la imagen con los rostros resaltados.
  */
 public class FaceDetector {
 
+    /**
+     * Detecta rostros en la imagen proporcionada y guarda la imagen con los rostros resaltados.
+     *
+     * @param imagePath Archivo de imagen en el que se buscarán los rostros.
+     * @return Archivo de imagen con los rostros detectados y resaltados.
+     */
     public static File detectAndSave(File imagePath) {
+        // Cargar la biblioteca OpenCV
         System.load(Preferences.getOpenCVPath());
-        //create som objectes
+        
+        // Crear objeto para almacenar las detecciones de rostros
         MatOfRect faces = new MatOfRect();
         
+        // Leer la imagen desde el archivo
         Mat image = Imgcodecs.imread(imagePath.getAbsolutePath());
         
-        
-        // TO GRAY SCALE
+        // Convertir la imagen a escala de grises para mejorar la detección
         Mat grayFrame = new Mat();
-        Imgproc.cvtColor(image,grayFrame, Imgproc.COLOR_BGR2GRAY);
+        Imgproc.cvtColor(image, grayFrame, Imgproc.COLOR_BGR2GRAY);
         
-        
-        // improve contrast for better result
+        // Mejorar el contraste de la imagen en escala de grises
         Imgproc.equalizeHist(grayFrame, grayFrame);
         
-        
-        // mida mínima cares detectables en píxels
+        // Definir el tamaño mínimo de rostros detectables en píxeles
         int height = grayFrame.height();
         int absoluteFaceSize = 0;
-        if (Math.round(height*0.2f)>0){
+        if (Math.round(height * 0.2f) > 0) {
             absoluteFaceSize = Math.round(height * 0.2f);
         }
         
-        // Detect faces
+        // Cargar el clasificador de rostros preentrenado
         CascadeClassifier faceCascade = new CascadeClassifier();
-        
-        //load trained data file
         faceCascade.load("data/haarcascade_frontalface_alt2.xml");
-        faceCascade.detectMultiScale(grayFrame, faces, 1.1, 2, 0|Objdetect.CASCADE_SCALE_IMAGE, 
+        
+        // Detectar rostros en la imagen
+        faceCascade.detectMultiScale(grayFrame, faces, 1.1, 2, 0 | Objdetect.CASCADE_SCALE_IMAGE, 
                 new Size(absoluteFaceSize, absoluteFaceSize), new Size());
         
-        // Write to file
+        // Dibujar rectángulos alrededor de los rostros detectados
         Rect[] faceArray = faces.toArray();
-        for (int i=0; i<faceArray.length; i++){
-            //draw rect
-            Imgproc.rectangle(image, faceArray[i], new Scalar(255,123,45), 3);
+        for (int i = 0; i < faceArray.length; i++) {
+            Imgproc.rectangle(image, faceArray[i], new Scalar(255, 123, 45), 3);
         }
         
+        // Guardar la imagen con los rostros resaltados
         Imgcodecs.imwrite("images/output.jpg", image);
         
         return new File("images/output.jpg");
     }
-    
 }

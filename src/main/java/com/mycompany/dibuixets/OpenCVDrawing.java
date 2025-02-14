@@ -12,6 +12,9 @@ import java.io.File;
 import java.util.Stack;
 import org.opencv.core.Point; // Para dibujar en la imagen con OpenCV
 
+/**
+ * Clase que permite dibujar sobre una imagen usando OpenCV y Java Swing.
+ */
 public class OpenCVDrawing extends JPanel {
     private Mat image, background;
     private BufferedImage bufferedImage;
@@ -30,6 +33,12 @@ public class OpenCVDrawing extends JPanel {
     private static Main mainFrame;
 
     
+    /**
+     * Constructor de la clase OpenCVDrawing.
+     * 
+     * @param imagePath Ruta de la imagen a cargar.
+     * @param eraserButton Botón para activar el modo borrador.
+     */ 
     public OpenCVDrawing(String imagePath, JButton eraserButton) {
         System.load(Preferences.getOpenCVPath());
         this.eraserButton = eraserButton;
@@ -55,7 +64,7 @@ public class OpenCVDrawing extends JPanel {
             endPoint = null;
         }
     });
-
+    
     addMouseMotionListener(new MouseMotionAdapter() {
         @Override
         public void mouseDragged(MouseEvent e) {
@@ -114,6 +123,12 @@ public class OpenCVDrawing extends JPanel {
 
 
 
+    /**
+     * Convierte una imagen de OpenCV (Mat) a BufferedImage.
+     * 
+     * @param mat Imagen de OpenCV.
+     * @return Imagen convertida a BufferedImage.
+     */
     private BufferedImage matToBufferedImage(Mat mat) {
          Mat rgbMat = new Mat();
         Imgproc.cvtColor(mat, rgbMat, Imgproc.COLOR_BGR2RGB); // Convertir de BGR a RGB
@@ -131,12 +146,20 @@ public class OpenCVDrawing extends JPanel {
         double[] bgColor = background.get(point.y, point.x);
         return new Scalar(bgColor);
     }
-
+    
+    
+    /**
+     * Guarda el estado actual de la imagen para permitir deshacer cambios.
+     */
     private void saveState() {
         undoStack.push(image.clone());
         redoStack.clear();
     }
 
+    
+    /**
+     * Deshace la última acción realizada sobre la imagen.
+     */
     public void undo() {
         if (!undoStack.isEmpty()) {
             redoStack.push(image.clone());
@@ -146,6 +169,9 @@ public class OpenCVDrawing extends JPanel {
         }
     }
 
+    /**
+     * Rehace la última acción deshecha.
+     */
     public void redo() {
         if (!redoStack.isEmpty()) {
             undoStack.push(image.clone());
@@ -154,22 +180,38 @@ public class OpenCVDrawing extends JPanel {
             repaint();
         }
     }
-
+    /**
+     * Cambia entre el modo de dibujo y el modo borrador.
+     */
     public void toggleEraser() {
         eraserMode = !eraserMode;
         eraserButton.setText(eraserMode ? "Erasing" : "Drawing");
     }
 
-    public void toggleRectangleMode() {
-        drawingRectangle = !drawingRectangle;
-        drawingCircle = false;
-    }
+    /**
+    * Alterna el modo de dibujo de rectángulos.
+    * Si estaba activado, se desactiva y viceversa.
+    * Además, desactiva el modo de dibujo de círculos.
+    */
+   public void toggleRectangleMode() {
+       drawingRectangle = !drawingRectangle;
+       drawingCircle = false;
+   }
 
+    /**
+     * Alterna el modo de dibujo de círculos.
+     * Si estaba activado, se desactiva y viceversa.
+     * Además, desactiva el modo de dibujo de rectángulos.
+     */
     public void toggleCircleMode() {
         drawingCircle = !drawingCircle;
         drawingRectangle = false;
     }
 
+    /**
+     * Dibuja un rectángulo en la imagen si los puntos de inicio y fin están definidos.
+     * Se utiliza la librería OpenCV para realizar el dibujo.
+     */
     private void drawRectangle() {
         if (startPoint != null && endPoint != null) {
             Imgproc.rectangle(image, new org.opencv.core.Point(startPoint.x, startPoint.y),
@@ -180,6 +222,11 @@ public class OpenCVDrawing extends JPanel {
         }
     }
 
+    /**
+     * Dibuja un círculo en la imagen si los puntos de inicio y fin están definidos.
+     * Se calcula el radio a partir de la distancia entre los puntos.
+     * Se utiliza la librería OpenCV para realizar el dibujo.
+     */
     private void drawCircle() {
         if (startPoint != null && endPoint != null) {
             int radius = (int) Math.sqrt(Math.pow(endPoint.x - startPoint.x, 2) + Math.pow(endPoint.y - startPoint.y, 2));
@@ -190,21 +237,41 @@ public class OpenCVDrawing extends JPanel {
         }
     }
     
+    /**
+     * Establece el color actual para el dibujo.
+     * @param color El nuevo color a utilizar.
+     */
     public void setColor(Color color) {
         this.currentColor = color;
     }
     
+    /**
+     * Establece el grosor del trazo para el dibujo.
+     * @param size El nuevo grosor a utilizar.
+     */
     public void setThickness(int size) {
         this.thickness = size;
     }
+
     
+    
+    /**
+     * Guarda la imagen editada en la ruta especificada.
+     * 
+     * @param path Ruta donde se guardará la imagen.
+     */
     public void saveImage(String path) {
         Imgcodecs.imwrite(path, image);
         JOptionPane.showMessageDialog(this, "Imatge desada com: " + path);
         mainFrame.setImage(new File(path));
     }
 
-    
+    /**
+     * Configura y muestra la aplicación de dibujo con OpenCV.
+     * 
+     * @param image Archivo de imagen a editar.
+     * @param mainFrame Instancia principal de la aplicación.
+     */
     public static void setUp(File image, Main mainFrame){
         OpenCVDrawing.mainFrame = mainFrame;
         String imagePath = image.getAbsolutePath();

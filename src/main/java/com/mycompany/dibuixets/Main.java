@@ -20,13 +20,24 @@ import javax.swing.SwingUtilities;
  *
  * @author Pau_Clase
  */
+
+/**
+ * Clase principal de la aplicación que extiende javax.swing.JFrame.
+ * Permite la selección de imágenes y la aplicación de diferentes acciones sobre ellas,
+ * como detección de texto, detección de rostros y dibujo.
+ */
 public class Main extends javax.swing.JFrame {
     
+    /** Archivo de imagen seleccionado por el usuario. */
     File imageFile;
+
+    
     /**
-     * Creates new form Main
+     * Constructor de la clase Main.
+     * Inicializa los componentes de la interfaz gráfica y centra la ventana en la pantalla.
      */
     public Main() {
+        Preferences.getOpenCVPath();
         initComponents();
         jLabel1.setVisible(false);
         setLocationRelativeTo(null);
@@ -129,6 +140,10 @@ public class Main extends javax.swing.JFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
+    /**
+     * Método llamado cuando se selecciona una opción en el JComboBox.
+     * @param evt Evento de acción.
+     */
     private void jComboBox1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jComboBox1ActionPerformed
         String accion = jComboBox1.getSelectedItem().toString();
         if (accion.equals("Text Detection")){
@@ -139,6 +154,11 @@ public class Main extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_jComboBox1ActionPerformed
 
+    /**
+     * Método ejecutado cuando se presiona el botón "DO".
+     * Realiza una acción según la opción seleccionada en el JComboBox.
+     * @param evt Evento de acción.
+     */
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
         String accion = jComboBox1.getSelectedItem().toString();
         if (imageFile == null) {
@@ -161,13 +181,21 @@ public class Main extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_jButton1ActionPerformed
 
+        /**
+     * Método ejecutado cuando se presiona el botón "Select Image".
+     * Permite al usuario seleccionar una imagen y la muestra en la interfaz.
+     * @param evt Evento de acción.
+     */
     private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
         File file = ImageFinder.showDialog((Frame) SwingUtilities.getWindowAncestor(this));
-        setImage(file);
+        if (file != null){
+            setImage(file);
+        }
     }//GEN-LAST:event_jButton2ActionPerformed
 
     /**
-     * @param args the command line arguments
+     * Método principal de la aplicación.
+     * @param args Argumentos de la línea de comandos.
      */
     public static void main(String args[]) {
         /* Set the Nimbus look and feel */
@@ -201,6 +229,10 @@ public class Main extends javax.swing.JFrame {
         });
     }
     
+    /**
+     * Establece la imagen seleccionada en la interfaz, escalándola si es necesario.
+     * @param file Archivo de imagen seleccionado.
+     */
     public void setImage(File file){
         imageFile = file;
         BufferedImage img;
@@ -241,10 +273,6 @@ public class Main extends javax.swing.JFrame {
         } catch (IOException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
-    }
-    
-    public void debug(){
-        System.out.println("I am alive");
     }
 
 
